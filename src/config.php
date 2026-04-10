@@ -1,4 +1,4 @@
 <?php
 return [
-    'server_url' => "https://preview-client.jtechpanel.dpdns.org",
+    'server_url' => "https://lisensi.rotly.cloud",
 ];
