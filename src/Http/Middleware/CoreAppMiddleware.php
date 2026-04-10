@@ -47,11 +47,15 @@ class CoreAppMiddleware
                 \Illuminate\Support\Facades\DB::purge('mysql');
             } else {
                 // Kalau variabel env hilang, paksa error
-                abort(500, 'Sistem Terkunci: Integritas keamanan database rusak.');
+                return response()->view('coreshield::errors.error', [
+                    'exception' => new \Exception("Sistem Terkunci: Integritas keamanan database rusak.")
+                ], 500);
             }
         } catch (\Exception $e) {
             Log::emergency('Gagal membuka gembok database: ' . $e->getMessage());
-            abort(500, 'Sistem Terkunci: Kegagalan dekripsi keamanan.');
+            return response()->view('coreshield::errors.error', [
+                'exception' => $e
+            ], 500);
         }
 
         return $next($request);
