@@ -11,10 +11,12 @@ class SystemUpdate extends Command
     protected $signature = 'app:update';
     protected $description = 'Cek dan install pembaruan sistem dari server lisensi.';
 
-    private string $serverUrl = 'https://preview-client.jtechpanel.dpdns.org/api/v1';
+    private string $serverUrl;
 
     public function handle()
     {
+        $config = require __DIR__ . "/../../config.php";
+        $this->serverUrl = $config['server_url'] . "/api/v1";
         $this->info('Mengecek versi terbaru...');
         $currentVersion = env('APP_VERSION', '1.0.0');
         $licenseKey = env('LICENSE_KEY');
