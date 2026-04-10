@@ -43,7 +43,7 @@ class CoreShieldProvider extends ServiceProvider
         // 3. LOAD CUSTOM VIEWS
         // Biar halaman error 403 "Sistem Terkunci" tadi bisa dipanggil dari dalam package
         // Pastikan lo masukin file blade-nya di dalam folder package: resources/views/errors/license.blade.php
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'coreshield');
+        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'coreshield');
 
         // Opsional: Publish view kalau client butuh custom tampilannya
         // $this->publishes([
