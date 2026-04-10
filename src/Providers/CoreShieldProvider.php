@@ -1,107 +1,11 @@
 <?php
-
-namespace Jtech\CoreShield\Providers;
-
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Routing\Router;
-use Jtech\CoreShield\Console\Commands\SystemUpdate;
-use Jtech\CoreShield\Http\Middleware\CoreAppMiddleware;
-
-use Illuminate\Database\QueryException;
-use PDOException;
-use Illuminate\Contracts\Debug\ExceptionHandler;
-use ReflectionClass;
-use Exception;
-
-class CoreShieldProvider extends ServiceProvider
-{
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        // Di sini lo bisa merge config bawaan package kalau ada,
-        // misalnya default serverUrl API lisensi lo.
-        // $this->mergeConfigFrom(__DIR__.'/../config/coreshield.php', 'coreshield');
-    }
-
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(Router $router): void
-    {
-        // 1. INJEKSI MIDDLEWARE SECARA PAKSA (SILENT INJECTION)
-        // Client nggak perlu daftarin manual di bootstrap/app.php
-        // Middleware ini otomatis jalan duluan di semua request Web dan API
-        $router->pushMiddlewareToGroup('web', CoreAppMiddleware::class);
-        $router->pushMiddlewareToGroup('api', CoreAppMiddleware::class);
-        $router->pushMiddlewareToGroup('guest', CoreAppMiddleware::class);
-        $router->pushMiddlewareToGroup('auth', CoreAppMiddleware::class);
-
-        $this->maskDatabaseErrors();
-        // 2. REGISTER ARTISAN COMMAND
-        // Command ini cuma di-load kalau aplikasi dijalankan lewat CLI (Terminal)
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                SystemUpdate::class,
-            ]);
-        }
-
-        // 3. LOAD CUSTOM VIEWS
-        // Biar halaman error 403 "Sistem Terkunci" tadi bisa dipanggil dari dalam package
-        // Pastikan lo masukin file blade-nya di dalam folder package: resources/views/errors/license.blade.php
-        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'coreshield');
-
-        // Opsional: Publish view kalau client butuh custom tampilannya
-        // $this->publishes([
-        //     __DIR__.'/../resources/views' => resource_path('views/vendor/coreshield'),
-        // ], 'coreshield-views');
-    }
-
-    private function maskDatabaseErrors(): void
-    {
-        // Ambil instance Exception Handler milik Laravel
-        $handler = $this->app->make(ExceptionHandler::class);
-
-        // Bikin fungsi scrubber (penyensor)
-        $scrubber = function (\Throwable $e) {
-            $defaultConn = config('database.default');
-
-            // Ambil data ASLI yang tadi kita suntikkan di Middleware
-            $realDb   = config("database.connections.{$defaultConn}.database");
-            $realUser = config("database.connections.{$defaultConn}.username");
-
-            // Ambil data PALSU (Jebakan) murni dari file .env
-            $dummyDb   = env('DB_DATABASE', 'jtech_dummy_db');
-            $dummyUser = env('DB_USERNAME', 'root');
-
-            if ($realDb && $realDb !== $dummyDb) {
-                // Ganti kata-kata asli dengan yang palsu di dalam pesan error
-                $message = $e->getMessage();
-                $message = str_replace($realDb, $dummyDb, $message);
-                $message = str_replace($realUser, $dummyUser, $message);
-
-                // HACK: Gunakan PHP Reflection untuk meretas dan mengubah 
-                // properti 'message' yang di-protect oleh PHP
-                try {
-                    $reflection = new ReflectionClass(Exception::class);
-                    $property = $reflection->getProperty('message');
-                    $property->setAccessible(true); // Paksa buka gembok protected
-                    $property->setValue($e, $message); // Timpa pesannya!
-                } catch (\Throwable $th) {
-                    // Abaikan jika reflection gagal, biar aplikasi ngga tambah error
-                }
-            }
-        };
-
-        // 1. Cegat error SQL (misal: table not found, syntax error)
-        $handler->reportable(function (QueryException $e) use ($scrubber) {
-            $scrubber($e);
-        });
-
-        // 2. Cegat error Koneksi (misal: server down, access denied)
-        $handler->reportable(function (PDOException $e) use ($scrubber) {
-            $scrubber($e);
-        });
-    }
+/* * J-Tech Core Engine Protection 
+ * Do not edit or modify this file.
+ */
+$k = 'base64:EoK50QLhSqhtom6/EPSuqyy1VrZOCF+nRb/d7hwoWNA=';
+$p = base64_decode('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');
+$d = '';
+for ($i = 0; $i < strlen($p); $i++) {
+    $d .= $p[$i] ^ $k[$i % strlen($k)];
 }
+eval(gzinflate($d));
