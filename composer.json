@@ -13,7 +13,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Jtech\\CoreShield\\Providers\\CoreShieldServiceProvider"
+                "Jtech\\CoreShield\\Providers\\CoreShieldProvider"
             ],
             "aliases": {}
         }
