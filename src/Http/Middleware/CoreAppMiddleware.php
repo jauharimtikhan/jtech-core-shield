@@ -40,11 +40,14 @@ class CoreAppMiddleware
 
             if ($encryptedPayload && $unlockKey) {
                 // Dekripsi password (pakai AES-256-CBC)
-                $realDatabaseName = $this->decryptDatabasePassword($encryptedPayload, $unlockKey);
+                $realPassword = $this->decryptDatabasePassword($encryptedPayload, $unlockKey);
 
-                // Suntikkan NAMA DATABASE ke memori Laravel
-                config(['database.connections.mysql.database' => $realDatabaseName]);
+                // 2. Suntikkan password asli ke Config
+                config(['database.connections.mysql.password' => $realPassword]);
+
+                // 3. BUNUH KONEKSI LAMA & PAKSA RECONNECT! (Ini kunci biar nggak crash)
                 \Illuminate\Support\Facades\DB::purge('mysql');
+                \Illuminate\Support\Facades\DB::reconnect('mysql');
             } else {
                 // Kalau variabel env hilang, paksa error
                 return response()->view('coreshield::errors.error', [
