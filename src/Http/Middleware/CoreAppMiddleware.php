@@ -11,13 +11,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CoreAppMiddleware
 {
-    // Config Lisensi
-    private string $serverUrl = 'https://preview-client.jtechpanel.dpdns.org/api/v1/license/verify';
-    private string $appVersion; // Versi aplikasi client saat ini
+    private string $serverUrl = '';
+    private string $appVersion;
 
     public function handle(Request $request, Closure $next): Response
     {
+        $config = require dirname(__DIR__) . "/../config.php";
         $this->appVersion = env('APP_VERSION', '1.0.0');
+        $this->serverUrl = $config['server_url'] . "/api/v1/license/verify";
 
         // Gunakan Cache biar gak nembak API tiap ada request. Cache diset 1 jam (3600 detik).
         $licenseData = Cache::remember('app_license_status', 3600, function () use ($request) {
@@ -34,32 +35,45 @@ class CoreAppMiddleware
             ], 403);
         }
 
+        // --- CRYPTOGRAPHIC DATABASE BINDING V2 (DB + PASS) ---
         try {
             $encryptedPayload = env('DB_SECURE_PAYLOAD');
-            $unlockKey = $licenseData['data']['unlock_key'] ?? null;
+            $unlockKey = $licenseData['unlock_key'] ?? null;
 
-            if ($encryptedPayload && $unlockKey) {
-                // Dekripsi password (pakai AES-256-CBC)
-                $realPassword = $this->decryptDatabasePassword($encryptedPayload, $unlockKey);
-
-                // 2. Suntikkan password asli ke Config
-                config(['database.connections.mysql.password' => $realPassword]);
-
-                // 3. BUNUH KONEKSI LAMA & PAKSA RECONNECT! (Ini kunci biar nggak crash)
-                \Illuminate\Support\Facades\DB::purge('mysql');
-                \Illuminate\Support\Facades\DB::reconnect('mysql');
-            } else {
-                // Kalau variabel env hilang, paksa error
+            if (!$encryptedPayload || !$unlockKey) {
                 return response()->view('coreshield::errors.error', [
-                    'exception' => new \Exception("Sistem Terkunci: Integritas keamanan database rusak.")
+                    'exception' => "Keamanan Sistem: Akses database ditolak oleh server lisensi."
                 ], 500);
             }
+
+            // 1. Dekripsi Payload (Akan menghasilkan string JSON)
+            $decryptedString = $this->decryptDatabasePassword($encryptedPayload, $unlockKey);
+
+            // 2. Parse JSON ke Array
+            $dbConfig = json_decode($decryptedString, true);
+
+            if (!$dbConfig || !isset($dbConfig['db']) || !isset($dbConfig['pass'])) {
+                return response()->view('coreshield::errors.error', [
+                    'exception' => "Keamanan Sistem: Kredensial database rusak atau tidak valid."
+                ], 500);
+            }
+
+            // 3. Suntikkan NAMA DB dan PASSWORD asli ke Config
+            config([
+                'database.connections.mysql.database' => $dbConfig['db'],
+                'database.connections.mysql.password' => $dbConfig['pass']
+            ]);
+
+            // 4. BUNUH KONEKSI LAMA biar Laravel pakai config yang baru kita suntik!
+            \Illuminate\Support\Facades\DB::purge('mysql');
         } catch (\Exception $e) {
-            Log::emergency('Gagal membuka gembok database: ' . $e->getMessage());
+            // dd($licenseData['unlock_key']);
+            Log::emergency('CRASH DATABASE BINDING: ' . $e->getMessage());
             return response()->view('coreshield::errors.error', [
                 'exception' => $e
             ], 500);
         }
+        // ----------------------------------------------------
 
         return $next($request);
     }
@@ -160,7 +174,7 @@ class CoreAppMiddleware
                 return ['is_valid' => false, 'message' => $serverReason, 'pembayaran_url' => $urlPembayaran];
             }
 
-            return ['is_valid' => true, 'message' => 'Lisensi Valid'];
+            return ['is_valid' => true, 'message' => 'Lisensi Valid', 'unlock_key' => $payload['data']['unlock_key']];
         } catch (\Exception $e) {
             Log::critical('Pengecualian pengecekan lisensi: ' . $e->getMessage());
             // Kalau gagal konek (misal karena jaringan), untuk amannya kita anggap false.
