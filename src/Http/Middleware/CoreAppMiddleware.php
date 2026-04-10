@@ -40,13 +40,10 @@ class CoreAppMiddleware
 
             if ($encryptedPayload && $unlockKey) {
                 // Dekripsi password (pakai AES-256-CBC)
-                $realPassword = $this->decryptDatabasePassword($encryptedPayload, $unlockKey);
+                $realDatabaseName = $this->decryptDatabasePassword($encryptedPayload, $unlockKey);
 
-                // Suntikkan password asli ke memori Laravel (Config)
-                // Ini akan menimpa password palsu di .env HANYA untuk request ini
-                config(['database.connections.mysql.password' => $realPassword]);
-
-                // Opsional: Reconnect database biar pakai password baru
+                // Suntikkan NAMA DATABASE ke memori Laravel
+                config(['database.connections.mysql.database' => $realDatabaseName]);
                 \Illuminate\Support\Facades\DB::purge('mysql');
             } else {
                 // Kalau variabel env hilang, paksa error
