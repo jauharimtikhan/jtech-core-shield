@@ -7,7 +7,7 @@ use Illuminate\Routing\Router;
 use Jtech\CoreShield\Console\Commands\SystemUpdate;
 use Jtech\CoreShield\Http\Middleware\CoreAppMiddleware;
 
-class CoreShieldServiceProvider extends ServiceProvider
+class CoreShieldProvider extends ServiceProvider
 {
     /**
      * Register any application services.
