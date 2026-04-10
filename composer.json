@@ -1,0 +1,15 @@
+{
+    "name": "jtech/core-shield",
+    "autoload": {
+        "psr-4": {
+            "Jtech\\CoreShield\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "jauhar-imtikhan",
+            "email": "bangjoe.muns@gmail.com"
+        }
+    ],
+    "require": {}
+}
