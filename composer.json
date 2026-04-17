@@ -1,0 +1,21 @@
+{
+    "name": "jtech/core-shield",
+    "description": "J-Tech Core Protection System",
+    "type": "library",
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jtech\\CoreShield\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Jtech\\CoreShield\\Providers\\CoreShieldProvider"
+            ],
+            "aliases": {}
+        }
+    }
+}

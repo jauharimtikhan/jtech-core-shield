@@ -1,0 +1,4 @@
+vendor
+core
+!src/
+!resources/
